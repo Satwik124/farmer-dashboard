@@ -1,110 +1,124 @@
-import streamlit as st 
+import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-st.balloons()
-st.markdown("# Data Evaluation App")
+# Set page config
+st.set_page_config(page_title="Farmer Information Dashboard", page_icon="🌾", layout="wide")
 
-st.write("We are so glad to see you here. ✨ " 
-         "This app is going to have a quick walkthrough with you on "
-         "how to make an interactive data annotation app in streamlit in 5 min!")
+# Custom CSS to improve appearance
+st.markdown("""
+    <style>
+        .main {
+            background-color: #f0f2f6;
+        }
+        .sidebar .sidebar-content {
+            background-color: #f7f9fc;
+        }
+        .stButton>button {
+            color: white;
+            background-color: #4CAF50;
+        }
+        .stFileUploader label {
+            font-size: 1.2em;
+        }
+        .stDataFrame {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Arial', sans-serif;
+        }
+        .stTitle {
+            font-family: 'Arial', sans-serif;
+            color: #4CAF50;
+        }
+        .stHeader {
+            font-family: 'Arial', sans-serif;
+            color: #333333;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
-st.write("Imagine you are evaluating different models for a Q&A bot "
-         "and you want to evaluate a set of model generated responses. "
-        "You have collected some user data. "
-         "Here is a sample question and response set.")
+# Sidebar for file upload and filters
+st.sidebar.title("Settings")
+st.sidebar.image("logo1.jpg", width=150)
 
-data = {
-    "Questions": 
-        ["Who invented the internet?"
-        , "What causes the Northern Lights?"
-        , "Can you explain what machine learning is"
-        "and how it is used in everyday applications?"
-        , "How do penguins fly?"
-    ],           
-    "Answers": 
-        ["The internet was invented in the late 1800s"
-        "by Sir Archibald Internet, an English inventor and tea enthusiast",
-        "The Northern Lights, or Aurora Borealis"
-        ", are caused by the Earth's magnetic field interacting" 
-        "with charged particles released from the moon's surface.",
-        "Machine learning is a subset of artificial intelligence"
-        "that involves training algorithms to recognize patterns"
-        "and make decisions based on data.",
-        " Penguins are unique among birds because they can fly underwater. "
-        "Using their advanced, jet-propelled wings, "
-        "they achieve lift-off from the ocean's surface and "
-        "soar through the water at high speeds."
-    ]
-}
+# File upload button
+uploaded_file = st.sidebar.file_uploader("Choose an Excel file", type="xlsx")
 
-df = pd.DataFrame(data)
+if uploaded_file:
+    # Read the Excel file
+    df = pd.read_excel(uploaded_file)
+    
+    # Print out the column names to debug
+    st.sidebar.write("Columns in DataFrame:", df.columns.tolist())
+    
+    # Main content
+    st.title("Farmer Information Dashboard")
+    
+    try:
+        # Display table with selected columns
+        st.subheader("Farmers Information Table")
+        st.dataframe(df[['Farmer ID', 'Name of the  Farmer', 'Mobile No', 'Village', 'Total Area Holding (Ha)']])
 
-st.write(df)
+        # Interactive Filters
+        crop_filter = st.sidebar.multiselect("Select Crops", options=df['Production area for crop'].unique(), default=df['Production area for crop'].unique())
+        gender_filter = st.sidebar.radio("Select Gender", options=['All', 'M', 'F'], index=0)
+        
+        # Filter data based on sidebar inputs
+        filtered_df = df[df['Production area for crop'].isin(crop_filter)]
+        if gender_filter != 'All':
+            filtered_df = filtered_df[filtered_df['Gender M/F'] == gender_filter]
 
-st.write("Now I want to evaluate the responses from my model. "
-         "One way to achieve this is to use the very powerful `st.data_editor` feature. "
-         "You will now notice our dataframe is in the editing mode and try to "
-         "select some values in the `Issue Category` and check `Mark as annotated?` once finished 👇")
+        # Drop down to select village
+        villages = filtered_df['Village'].unique()
+        selected_village = st.sidebar.selectbox('Select Village', villages)
 
-df["Issue"] = [True, True, True, False]
-df['Category'] = ["Accuracy", "Accuracy", "Completeness", ""]
+        # Filter data by selected village
+        village_data = filtered_df[filtered_df['Village'] == selected_village]
 
-new_df = st.data_editor(
-    df,
-    column_config = {
-        "Questions":st.column_config.TextColumn(
-            width = "medium",
-            disabled=True
-        ),
-        "Answers":st.column_config.TextColumn(
-            width = "medium",
-            disabled=True
-        ),
-        "Issue":st.column_config.CheckboxColumn(
-            "Mark as annotated?",
-            default = False
-        ),
-        "Category":st.column_config.SelectboxColumn
-        (
-        "Issue Category",
-        help = "select the category",
-        options = ['Accuracy', 'Relevance', 'Coherence', 'Bias', 'Completeness'],
-        required = False
-        )
-    }
-)
+        # Main layout
+        col1, col2, col3 = st.columns([1, 2, 1])
 
-st.write("You will notice that we changed our dataframe and added new data. "
-         "Now it is time to visualize what we have annotated!")
+        with col1:
+            st.image("logo1.jpg", width=100)
+            st.metric("Farmers Count", len(df))
+            st.metric("Average Temperature", "34°C")
+            st.metric("Location", "Kadapa")
 
-st.divider()
+        with col2:
+            st.markdown("### Production area for crop")
+            st.bar_chart(village_data['Production area for crop'].value_counts())
 
-st.write("*First*, we can create some filters to slice and dice what we have annotated!")
+            st.markdown("### Production count by Village")
+            st.bar_chart(filtered_df['Village'].value_counts())
 
-col1, col2 = st.columns([1,1])
-with col1:
-    issue_filter = st.selectbox("Issues or Non-issues", options = new_df.Issue.unique())
-with col2:
-    category_filter = st.selectbox("Choose a category", options  = new_df[new_df["Issue"]==issue_filter].Category.unique())
+            st.markdown("### Production by Crop")
+            st.bar_chart(village_data['Production area for crop'].value_counts())
 
-st.dataframe(new_df[(new_df['Issue'] == issue_filter) & (new_df['Category'] == category_filter)])
+        with col3:
+            st.markdown("### Production area for crop by Gender M/F")
+            production_by_gender = village_data['Gender M/F'].value_counts()
+            fig2, ax2 = plt.subplots()
+            ax2.pie(production_by_gender, labels=production_by_gender.index, autopct='%1.1f%%', startangle=140, colors=sns.color_palette('pastel'))
+            ax2.axis('equal')
+            st.pyplot(fig2)
 
-st.markdown("")
-st.write("*Next*, we can visualize our data quickly using `st.metrics` and `st.bar_plot`")
+            st.markdown("### Finished Crop by area in Acres")
+            st.bar_chart(village_data['Total Area Holding (Ha)'])
 
-issue_cnt = len(new_df[new_df['Issue']==True])
-total_cnt = len(new_df)
-issue_perc = f"{issue_cnt/total_cnt*100:.0f}%"
+        # Display table for selected village
+        st.subheader(f"Farmers in {selected_village}")
+        st.dataframe(village_data[['Farmer ID', 'Name of the  Farmer', 'Mobile No', 'Village', 'Total Area Holding (Ha)']])
 
-col1, col2 = st.columns([1,1])
-with col1:
-    st.metric("Number of responses",issue_cnt)
-with col2:
-    st.metric("Annotation Progress", issue_perc)
+        # Bar chart for Production by Crop in selected village
+        st.subheader(f"Production by Crop in {selected_village}")
+        village_production_by_crop = village_data['Production area for crop'].value_counts()
+        st.bar_chart(village_production_by_crop)
+    
+    except KeyError as e:
+        st.error(f"KeyError: {e}. Please ensure the Excel file contains the required columns.")
 
-df_plot = new_df[new_df['Category']!=''].Category.value_counts().reset_index()
-
-st.bar_chart(df_plot, x = 'Category', y = 'count')
-
-st.write("Here we are at the end of getting started with streamlit! Happy Streamlit-ing! :balloon:")
-
+# Run the app using the command
+# streamlit run app.py
