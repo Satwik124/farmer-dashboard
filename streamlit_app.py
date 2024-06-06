@@ -6,39 +6,12 @@ import seaborn as sns
 # Set page config
 st.set_page_config(page_title="Farmer Information Dashboard", page_icon="🌾", layout="wide")
 
-# Custom CSS to improve appearance
-st.markdown("""
-    <style>
-        .main {
-            background-color: #f0f2f6;
-        }
-        .sidebar .sidebar-content {
-            background-color: #f7f9fc;
-        }
-        .stButton>button {
-            color: white;
-            background-color: #4CAF50;
-        }
-        .stFileUploader label {
-            font-size: 1.2em;
-        }
-        .stDataFrame {
-            border-radius: 15px;
-            overflow: hidden;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Arial', sans-serif;
-        }
-        .stTitle {
-            font-family: 'Arial', sans-serif;
-            color: #4CAF50;
-        }
-        .stHeader {
-            font-family: 'Arial', sans-serif;
-            color: #333333;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+# Load custom CSS
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+local_css("styles.css")
 
 # Sidebar for file upload and filters
 st.sidebar.title("Settings")
@@ -119,6 +92,3 @@ if uploaded_file:
     
     except KeyError as e:
         st.error(f"KeyError: {e}. Please ensure the Excel file contains the required columns.")
-
-# Run the app using the command
-# streamlit run app.py
