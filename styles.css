@@ -1,0 +1,52 @@
+/* styles.css */
+body {
+    background-color: #f0f2f6;
+}
+
+.sidebar .sidebar-content {
+    background-color: #f7f9fc;
+}
+
+.stButton>button {
+    color: white;
+    background-color: #4CAF50;
+}
+
+.stFileUploader label {
+    font-size: 1.2em;
+}
+
+.stDataFrame {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Arial', sans-serif;
+}
+
+.stTitle {
+    font-family: 'Arial', sans-serif;
+    color: #4CAF50;
+}
+
+.stHeader {
+    font-family: 'Arial', sans-serif;
+    color: #333333;
+}
+
+.stMetric {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.stPieChart {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
